@@ -31,6 +31,57 @@ pip install --target ./libs psutil
 PYTHONPATH=./libs python link_check.py ...
 ```
 
+## Cómo arrancar
+
+Tienes dos puntos de entrada. Elige según el nivel de control que necesites.
+
+### `start.sh` / `start.bat` (recomendado para la práctica)
+
+Son scripts de auto-arranque que preparan el entorno antes de la práctica:
+
+- Detectan el Python disponible en el sistema.
+- Si `psutil` no está instalado, lo instalan con `pip`.
+- Si hay permisos de administrador, asignan automáticamente la IP
+  link-local a tu interfaz.
+- Si no los hay, abren un menú interactivo con hacer ping, re-asignar
+  IP, mostrar el Plan B, etc.
+
+```bash
+./start.sh              # Linux / macOS
+start.bat                # Windows (cmd o PowerShell)
+sudo ./start.sh          # Linux / macOS: para que la asignación de IP sea automática
+```
+
+> En el laboratorio sin internet, primero instala `psutil` en una
+> máquina con red (`pip install -r requirements.txt`) y copia la
+> carpeta al equipo del laboratorio. El auto-arranque seguirá
+> intentando `pip install`; si falla, mostrará el Plan B.
+
+### `link_check.py` (modo directo)
+
+Para usar el script sin auto-install ni auto-asignación. Útil cuando
+ya tienes todo listo o quieres controlar cada paso:
+
+```bash
+python link_check.py --assign-ip
+python link_check.py 169.254.42.10
+```
+
+Equivalente a `python -m linkcheck`.
+
+### Comandos externos visibles
+
+Antes de invocar cada comando del sistema (`netsh`, `ip`, `ping`)
+el script imprime la línea exacta que va a ejecutar, por ejemplo:
+
+```
+[*] Ejecutando: ip addr add 169.254.194.89/16 dev enp3s0
+[*] Ejecutando: ping -c 4 -W 2 169.254.42.10
+```
+
+Sirve para que sepas qué hace el script por detrás y puedas replicarlo
+a mano si algo falla (consulta el Plan B más abajo).
+
 ## Uso rápido
 
 1. **Asigna tu IP link-local** (una sola vez al iniciar la práctica):
@@ -79,12 +130,14 @@ python link_check.py -i enp0s3 169.254.42.10 -c 8 -v
 
 ```
 [+] Asignando IP link-local a enp0s3: 169.254.142.57/16 ...
+    [*] Ejecutando: ip addr add 169.254.142.57/16 dev enp0s3
     OK -> 169.254.142.57/16
 
 [+] Interfaz enp0s3: ENLACE UP (1000 Mbps, full-duplex, MTU 1500)
 [+] Mi IP: 169.254.142.57/16
 
 [+] Ping a 169.254.42.10 (4 paquetes, timeout 2s)...
+    [*] Ejecutando: ping -c 4 -W 2 169.254.42.10
     Enviados: 4   Recibidos: 4   Pérdida: 0.0%
     Latencia: min=0.4 ms  media=0.7 ms  max=1.1 ms
 
