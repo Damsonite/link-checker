@@ -195,10 +195,14 @@ def _check_psutil() -> bool:
     return True
 
 
-def main() -> int:
+def main(argv: list[str] | None = None) -> int:
     if not _check_psutil():
         return 2
-    args = build_parser().parse_args()
-    if args.no_color:
+    parsed = build_parser().parse_args(argv)
+    if parsed.no_color:
         Color.disable()
-    return run(args)
+    return run(parsed)
+
+
+if __name__ == "__main__":
+    sys.exit(main())
