@@ -234,4 +234,3 @@ Get-NetIPAddress -InterfaceAlias "<interfaz>"
 - Exit codes: `0` si el ping fue exitoso, `1` si falló, `2` si el script
   no pudo ejecutarse (falta de permisos, dependencia ausente, etc.).
   Útil para automatizar la calificación.
-# link-checker
