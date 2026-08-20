@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import argparse
+import importlib.util
 import os
 import subprocess
 import sys
@@ -19,11 +20,7 @@ def version_str() -> str:
 
 
 def has_psutil() -> bool:
-    try:
-        import psutil  # noqa: F401
-        return True
-    except ImportError:
-        return False
+    return importlib.util.find_spec("psutil") is not None
 
 
 def is_admin() -> bool:
@@ -31,7 +28,7 @@ def is_admin() -> bool:
         try:
             import ctypes
             return ctypes.windll.shell32.IsUserAnAdmin() != 0
-        except Exception:
+        except (OSError, AttributeError, ImportError):
             return False
     try:
         return os.geteuid() == 0
@@ -253,7 +250,10 @@ def bootstrap_and_menu() -> int:
 
     if has_psutil() and is_admin():
         print("\n[INFO] Asignando IP link-local automáticamente...")
-        link_check("--assign-ip")
+        rc = link_check("--assign-ip")
+        if rc != 0:
+            print(f"[!] La asignación automática de IP falló (código {rc}).")
+            print("    Puedes reintentarlo desde la opción 3 del menú.")
     elif has_psutil():
         print("\n[INFO] No detecto permisos de administrador.")
         if IS_WINDOWS:

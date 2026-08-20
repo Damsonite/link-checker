@@ -5,7 +5,6 @@ import platform
 import re
 import subprocess
 import sys
-from typing import List, Optional, Tuple
 
 try:
     import psutil
@@ -83,7 +82,7 @@ class Color:
         return f"{color}{text}{cls.RESET}"
 
 
-def list_eth_interfaces() -> List[str]:
+def list_eth_interfaces() -> list[str]:
     candidates = []
     fallbacks = []
     for name in psutil.net_if_stats().keys():
@@ -101,7 +100,7 @@ def list_eth_interfaces() -> List[str]:
     return candidates + fallbacks
 
 
-def pick_active_interface(forced: Optional[str]) -> Optional[str]:
+def pick_active_interface(forced: str | None) -> str | None:
     if forced:
         return forced
     candidates = list_eth_interfaces()
@@ -111,7 +110,7 @@ def pick_active_interface(forced: Optional[str]) -> Optional[str]:
     return up_first[0] if up_first else candidates[0]
 
 
-def get_mac(iface: str) -> Optional[str]:
+def get_mac(iface: str) -> str | None:
     for a in psutil.net_if_addrs().get(iface, []):
         if MAC_RE.match(a.address):
             return a.address
@@ -125,7 +124,7 @@ def link_local_from_mac(mac: str) -> str:
     return f"{LINK_LOCAL_NET}.{third}.{fourth}"
 
 
-def has_link_local(iface: str) -> Optional[str]:
+def has_link_local(iface: str) -> str | None:
     for a in psutil.net_if_addrs().get(iface, []):
         if a.family == getattr(psutil, "AF_INET", 2):
             if a.address.startswith(LINK_LOCAL_NET + "."):
@@ -133,14 +132,14 @@ def has_link_local(iface: str) -> Optional[str]:
     return None
 
 
-def current_ipv4(iface: str) -> Optional[str]:
+def current_ipv4(iface: str) -> str | None:
     for a in psutil.net_if_addrs().get(iface, []):
         if a.family == getattr(psutil, "AF_INET", 2):
             return f"{a.address}/{a.netmask}"
     return None
 
 
-def assign_ip(iface: str, ip: str) -> Tuple[bool, str]:
+def assign_ip(iface: str, ip: str) -> tuple[bool, str]:
     if IS_WINDOWS:
         cmd = [
             "netsh",
@@ -167,7 +166,7 @@ def assign_ip(iface: str, ip: str) -> Tuple[bool, str]:
     return True, ""
 
 
-def run_ping(target: str, count: int, timeout: int) -> Tuple[int, dict]:
+def run_ping(target: str, count: int, timeout: int) -> tuple[int, dict]:
     if IS_WINDOWS:
         cmd = ["ping", "-n", str(count), "-w", str(timeout * 1000), target]
     else:
@@ -233,7 +232,10 @@ def parse_ping(output: str) -> dict:
         s["max_ms"] = float(m.group(2))
         s["avg_ms"] = float(m.group(3))
 
-    if "Destination host unreachable" in output or "Destination net unreachable" in output:
+    if (
+        "Destination host unreachable" in output
+        or "Destination net unreachable" in output
+    ):
         s["unreachable"] = True
     if "Request timed out" in output or "Tiempo de espera agotado" in output:
         s["timed_out"] = True
@@ -242,7 +244,7 @@ def parse_ping(output: str) -> dict:
     return s
 
 
-def diagnose(state: dict) -> List[str]:
+def diagnose(state: dict) -> list[str]:
     hints = []
     if not state.get("is_up"):
         hints.append(
