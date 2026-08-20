@@ -3,6 +3,7 @@ import subprocess
 
 from .constants import IS_WINDOWS
 from .ping import parse_ping
+from .shell import run_visible
 
 
 def assign_ip(iface: str, ip: str) -> tuple[bool, str]:
@@ -21,7 +22,7 @@ def assign_ip(iface: str, ip: str) -> tuple[bool, str]:
     else:
         cmd = ["ip", "addr", "add", f"{ip}/16", "dev", iface]
     try:
-        r = subprocess.run(cmd, capture_output=True, text=True)
+        r = run_visible(cmd, capture_output=True, text=True)
     except FileNotFoundError as e:
         return False, f"comando no disponible: {e}"
     if r.returncode != 0:
@@ -38,7 +39,7 @@ def run_ping(target: str, count: int, timeout: int) -> tuple[int, dict]:
     else:
         cmd = ["ping", "-c", str(count), "-W", str(timeout), target]
     try:
-        r = subprocess.run(
+        r = run_visible(
             cmd,
             capture_output=True,
             text=True,
